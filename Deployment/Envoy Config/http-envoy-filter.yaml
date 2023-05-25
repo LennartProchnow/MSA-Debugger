@@ -26,10 +26,35 @@ spec:
               function envoy_on_request(request_handle)
                 local headers = request_handle:headers()
                 local headersMap = {}
+                local headersPrint = "{"
                 for key, value in pairs(headers) do
                   headersMap[key] = value
-                end                
-                request_handle:streamInfo():dynamicMetadata():set("envoy.lua","request_headers",headersMap)                    
+                  if key == ":authority" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                  if key == ":path" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                  if key == ":method" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                  if key == ":scheme" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                  if key == "x-request-id" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                  if key == "x-b3-traceid" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                  if key == "x-b3-spanid" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                  if key == "x-b3-parentspanid" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                end
+                headersPrint = headersPrint:sub(1,-2) .. "}"                  
                 local requestBody = ""
                 for chunk in request_handle:bodyChunks() do
                   if (chunk:length() > 0) then
@@ -40,28 +65,24 @@ spec:
                   requestBody = "moin leider ist der Body null"
                 end
 
-                -- request_handle:streamInfo():dynamicMetadata():set("envoy.lua","request_body",requestBody)
-                request_handle:logErr("Test: Moin")
-                -- request_handle:logCritical("body: " .. requestBody)
+                local traceid = headersMap["x-b3-traceid"]
+                if traceid ~= nil then
+                  request_handle:logCritical("traceID vorhanden")
+                  local debugHeaders, debugBody = request_handle:httpCall(
+                    "debugger_cluster",
+                    {
+                      [":method"] = "POST",
+                      [":path"] = "/scenario/request/" .. traceid,
+                      [":authority"] = "scenario-recorder.debugger.svc.cluster.local"
+                    },
+                    headersPrint,
+                    5000)
 
-                local debugHeaders, debugBody = request_handle:httpCall(
-                  "debugger_cluster",
-                  {
-                    [":method"] = "POST",
-                    [":path"] = "/sayMoin",
-                    [":authority"] = "music-store-review.default.svc.cluster.local"
-                  },
-                  "authorize call",
-                  5000)
-
-                request_handle:logCritical("after http: " .. debugBody)
-
-                for dkey, dvalue in pairs(debugHeaders) do
-                  request_handle:logCritical("debug header: " .. dkey)
-                  request_handle:logCritical("debug value: " .. dvalue)
-                end 
-
-                
+                  for dkey, dvalue in pairs(debugHeaders) do
+                    request_handle:logCritical("debug header: " .. dkey)
+                    request_handle:logCritical("debug value: " .. dvalue)
+                  end 
+                end                 
               end
 
               function envoy_on_response(response_handle)
@@ -77,8 +98,7 @@ spec:
                     responseBody = responseBody .. chunk:getBytes(0, chunk:length())
                   end
                 end
-                response_handle:streamInfo():dynamicMetadata():set("envoy.lua","response_body",responseBody)
-                -- response_handle:logCritical("Response body: " .. responseBody)                  
+                response_handle:streamInfo():dynamicMetadata():set("envoy.lua","response_body",responseBody)                  
               end
   - applyTo: CLUSTER
     match:
@@ -97,5 +117,5 @@ spec:
             - endpoint:
                 address:
                   socket_address:
-                    address: music-store-review
+                    address: scenario-recorder.debugger.svc.cluster.local
                     port_value: 8888
