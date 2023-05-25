@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scenario-recorder
+  namespace: debugger
+spec:
+  selector:
+    matchLabels:
+      app: scenario-recorder
+  template:
+    metadata:
+      labels:
+        app: scenario-recorder
+    spec:
+      containers:
+      - name: scenario-recorder
+        image: debugger/scenario-recorder:latest
+        imagePullPolicy: Never # Bei Always will er anscheinend immer an ein Repository gehen
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8080
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: scenario-recorder
+  namespace: debugger
+spec:
+  type: NodePort
+  selector:
+    app: scenario-recorder
+  ports:
+  - port: 8888
+    targetPort: 8080
