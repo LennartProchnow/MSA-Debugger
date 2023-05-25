@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: javadev
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    #environment:
+      # NOTE: Credentials should match values in db container
+      #QUARKUS_NEO4J_URI: neo4j://neo4j:7687
+      #QUARKUS_NEO4J_AUTHENTICATION_USERNAME: neo4j
+      #QUARKUS_NEO4J_AUTHENTICATION_PASSWORD: password
+
+    volumes:
+      - ../..:/workspaces:cached
+      
+    # Overrides default command so things don't shut down after the process ends.
+    command: sleep infinity
+
+    # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
+    network_mode: service:db
+
+  #db:
+  #  container_name: neo4j
+  #  image: neo4j:5
+  #  restart: unless-stopped
+  #  environment:
+  #    NEO4J_AUTH: neo4j/password
+  #  ports:
+  #    - 7474:7474
+  #    - 7687:7687
+  #  volumes:
+  #    - ../.neo4j/conf:/conf
+  #    - ../.neo4j/data:/data
+  #    - ../.neo4j/import:/import
+  #    - ../.neo4j/logs:/logs
+  #    - ../.neo4j/plugins:/plugins
