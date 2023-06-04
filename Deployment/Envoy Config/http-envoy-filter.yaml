@@ -1,15 +1,16 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: request-response-filter
+  name: inbound-request-filter
   namespace: default
 spec:
-  workloadSelector:
-    labels:
+  #workloadSelector:
+    #labels:
+    #  app: reviews
   configPatches:
   - applyTo: HTTP_FILTER
     match:
-      context: ANY
+      context: SIDECAR_INBOUND
       listener:
         filterChain:
           filter:
@@ -25,6 +26,7 @@ spec:
             inlineCode: |
               function envoy_on_request(request_handle)
                 local headers = request_handle:headers()
+                
                 local headersMap = {}
                 local headersPrint = "{"
                 for key, value in pairs(headers) do
@@ -64,8 +66,10 @@ spec:
                 if (requestBody == nil or requestBody == "") then
                   requestBody = "moin leider ist der Body null"
                 end
+                local h = request_handle:streamInfo:requestedServerName()
+                request_handle:logCritical("REQUEST SERVERNAME: " h)
 
-                local traceid = headersMap["x-b3-traceid"]
+                local traceid = headersMap["x-b3-traceid"] 
                 if traceid ~= nil then
                   request_handle:logCritical("traceID vorhanden")
                   local debugHeaders, debugBody = request_handle:httpCall(
@@ -75,30 +79,116 @@ spec:
                       [":path"] = "/scenario/request/" .. traceid,
                       [":authority"] = "scenario-recorder.debugger.svc.cluster.local"
                     },
-                    headersPrint,
+                    "request: " .. headersPrint,
                     5000)
-
                   for dkey, dvalue in pairs(debugHeaders) do
                     request_handle:logCritical("debug header: " .. dkey)
                     request_handle:logCritical("debug value: " .. dvalue)
                   end 
                 end                 
               end
+  - applyTo: CLUSTER
+    match:
+      context: SIDECAR_INBOUND
+    patch:
+      operation: ADD
+      value: # cluster specification
+        connect_timeout: 0.5s
+        name: debugger_cluster
+        type: STRICT_DNS  # static
+        lb_policy: ROUND_ROBIN
+        load_assignment:
+          cluster_name: debugger_cluster
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: scenario-recorder.debugger.svc.cluster.local
+                    port_value: 8888
+
+---
+
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: outbound-response-filter
+  namespace: default
+spec:
+  #workloadSelector:
+    #labels:
+    #  app: reviews
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_OUTBOUND
+      listener:
+        filterChain:
+          filter:
+            name: "envoy.filters.network.http_connection_manager"
+            subFilter:
+              name: "envoy.filters.http.router"
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.lua
+        typed_config:
+            "@type": "type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua"
+            inlineCode: |
+              function envoy_on_request(request_handle)
+                request_handle:logCritical("PEEEEEEEEEEEEENIS")               
+              end
 
               function envoy_on_response(response_handle)
                 local headers = response_handle:headers()
                 local headersMap = {}
+                local headersPrint = ""
                 for key, value in pairs(headers) do
                   headersMap[key] = value
+                  if headersPrint == "" then
+                    headersPrint = headersPrint .. key .. ":" .. value 
+                  else
+                    headersPrint = headersPrint .. ", " .. key .. ":" .. value
+                  end
                 end                
-                response_handle:streamInfo():dynamicMetadata():set("envoy.lua","response_headers",headersMap)                    
+                                   
                 local responseBody = ""
                 for chunk in response_handle:bodyChunks() do
                   if (chunk:length() > 0) then
                     responseBody = responseBody .. chunk:getBytes(0, chunk:length())
                   end
                 end
-                response_handle:streamInfo():dynamicMetadata():set("envoy.lua","response_body",responseBody)                  
+
+                if (responseBody == nil or responseBody == "") then
+                  responseBody = "moin leider ist der Body null"
+                end
+
+                local h = response_handle:streamInfo:requestedServerName()
+                response_handle:logCritical("RESPONSE SERVERNAME: " h)
+
+
+                local publicTraceID = response_handle:streamInfo():dynamicMetadata():get("envoy.lua","response_id")
+                if (publicTraceID == nil or publicTraceID == "") then
+                  publicTraceID = "penis"
+                end
+
+                local rep = "response: " .. headersPrint .. " request-ID: " .. publicTraceID .. " body:" .. responseBody
+
+                local debugHeaders, debugBody = response_handle:httpCall(
+                  "debugger_cluster",
+                  {
+                    [":method"] = "POST",
+                    [":path"] = "/scenario/response/",
+                    [":authority"] = "scenario-recorder.debugger.svc.cluster.local"
+                  },
+                  rep,
+                  5000
+                )
+
+                for dkey, dvalue in pairs(debugHeaders) do
+                  response_handle:logCritical("debug header: " .. dkey)
+                  response_handle:logCritical("debug value: " .. dvalue)
+                end
               end
   - applyTo: CLUSTER
     match:
