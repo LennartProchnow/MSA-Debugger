@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import org.jboss.logging.Logger;
 
 import java.util.List;
 
@@ -21,17 +22,19 @@ import java.util.List;
 @ApplicationScoped
 public class ScenarioResource {
 
+
     @Inject
     EntityManager em;
 
     private ScenarioService scenarioService;
+    private static final Logger logger = Logger.getLogger(ScenarioResource.class);
 
     public ScenarioResource(ScenarioService scenarioService) {
         this.scenarioService = scenarioService;
     }
 
     @POST
-    @Path("/start")
+    @Path("/record/start")
     @Transactional
     public String startScenario(String name){
         Scenario s = new Scenario();
@@ -39,13 +42,16 @@ public class ScenarioResource {
         em.persist(s);
         em.flush();
         scenarioService.setActiveScenario(s);
+        logger.info("start recording of Scenario: " + s.getId());
         return String.valueOf(s.getId());
     }
 
     @POST
-    @Path("/stop")
-    public String stopScenario(){
+    @Path("/record/stop/{scenaioId}")
+    public String stopScenario(String scenaioId){
+        //ToDo hier müsste jetzt noch nach der Id gefiltert werden
         var scenario = scenarioService.getDeactivateScenario();
+        logger.info("stopped recording of Scenario: " + scenario.getId());
         return String.format("Scenario %s is stopped", scenario.getId());
     }
 
