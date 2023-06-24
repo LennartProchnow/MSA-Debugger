@@ -1,10 +1,8 @@
-package de.nordakademie.export;
+package de.nordakademie.setup.export;
 
-import de.nordakademie.export.model.Scenario;
+import de.nordakademie.setup.export.model.Scenario;
 import jakarta.ws.rs.GET;
-import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.QueryParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 @Path("scenario/")

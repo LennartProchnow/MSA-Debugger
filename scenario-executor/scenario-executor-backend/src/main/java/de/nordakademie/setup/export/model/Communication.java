@@ -1,4 +1,4 @@
-package de.nordakademie.export.model;
+package de.nordakademie.setup.export.model;
 
 public enum Communication {
 

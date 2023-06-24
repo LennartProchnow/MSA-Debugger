@@ -1,4 +1,4 @@
-package de.nordakademie.export;
+package de.nordakademie.setup.export;
 
 import io.smallrye.common.constraint.NotNull;
 import jakarta.enterprise.context.ApplicationScoped;

@@ -1,4 +1,4 @@
-package de.nordakademie.export.model;
+package de.nordakademie.setup.export.model;
 
 import java.util.ArrayList;
 import java.util.List;
