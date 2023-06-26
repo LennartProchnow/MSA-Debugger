@@ -8,7 +8,7 @@ import jakarta.ws.rs.Path;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
-@Path("scenario")
+@Path("replay/setup/scenario")
 @ApplicationScoped
 public class ScenarioExportResource {
 
