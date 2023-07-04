@@ -10,13 +10,7 @@ public interface ReplayEvent {
     /**
      * apply the event to reconstruct the communication event
      */
-    void apply();
-
-    /**
-     * indicates if the execution of the event is an request to send to the microservice
-     * @return true if the event is a request to be send
-     */
-    boolean isRequest();
+    void apply(NextEventExecution exe);
 
     /**
      * This method is to be used to get the payload for the communication to the microservice

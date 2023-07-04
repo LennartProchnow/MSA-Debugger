@@ -18,6 +18,8 @@ public class RequestSender {
     private MicroserviceRegistry configRegistry;
 
     public void send(ReplayEvent event) {
+
+        // ToDo: das tatsächliche Senden müsste eigentlich asynchron sein
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
 

@@ -1,21 +1,24 @@
 package de.nordakademie.msadebuggerreplayer.core;
 
+import de.nordakademie.msadebuggerreplayer.core.model.NextEventExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class RequestEventSink {
 
-    private ScenarioQueue queue;
+    private NextEventExecution exe;
 
-    public void setCurrentScenarioQueue(ScenarioQueue queue) {
-        this.queue = queue;
+    public void setNextEventExecution(NextEventExecution exe) {
+        this.exe = exe;
     }
 
     public ScenarioQueue getCurrentScenarioQueue() {
-        var result = this.queue;
-        this.queue = null;
-        return result;
+        return this.exe.queue();
+    }
+
+    public void applyNextEvent() {
+        exe.apply();
     }
 
 }

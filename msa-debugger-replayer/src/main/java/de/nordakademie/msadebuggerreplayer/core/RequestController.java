@@ -10,16 +10,16 @@ public class RequestController {
     @Autowired
     private RequestEventSink sink;
 
-    @Autowired
-    private ScenarioExecutor executor;
-
     @GetMapping
     public String performGetRequest(String str) {
         System.out.println(str);
         var queue = sink.getCurrentScenarioQueue();
 
-        //ToDo: hier müsste jetzt noch geguckt werden, ob das hier dann auch die richtige Message gewesen ist
-        executor.executeNextEvent(queue);
+        //ToDo entsprechende Response suchen und response zurückgeben
+
+        //der würde hier blockieren, heißt ich komme wahrscheinlich,
+        // um eine asynchrone Eventverarbeitung vielleicht garnicht drum herum
+        sink.applyNextEvent();
 
         return "Moin";
     }

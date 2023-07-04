@@ -3,6 +3,7 @@ package de.nordakademie.msadebuggerreplayer.core;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -22,12 +23,12 @@ public class ScenarioExecutorController {
         // Die Steuerung sollte über den Executor passieren
     }
 
-    @PostMapping("/prepare")
-    public String startPreparationPhase() {
+    @PostMapping("/prepare/{id}")
+    public String startPreparationPhase(@RequestParam(name = "id") String id) {
         // die ScenarioEvents werden überführt in ReplayEvents
         // die Events werden in eine Execution Queue geschrieben
         // die Execution Queue wird dann zurück gegeben
-        executor.prepare();
+        executor.prepare(id);
         return "finished Preparation Phase";
         // Die Steuerung sollte über den Executor passieren
     }

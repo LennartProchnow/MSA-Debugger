@@ -1,35 +1,31 @@
 package de.nordakademie.msadebuggerreplayer.core.model;
 
+import de.nordakademie.msadebuggerreplayer.core.RequestEventSink;
 import de.nordakademie.msadebuggerreplayer.core.RequestSender;
-import de.nordakademie.msadebuggerreplayer.setup.export.model.Header;
 import org.springframework.http.HttpMethod;
 
-import java.util.List;
+public class RequestReceiveEvent extends AbstractReplayEvent {
 
-public class RequestSendEvent extends AbstractReplayEvent {
-
-    private RequestSender sender;
+    private RequestEventSink sink;
 
     private String path;
 
     private HttpMethod httpMethod;
 
+    private String responseBody;
 
-    //hier müsste dann irgendwie das Recorded Item mit reingehängt werden
-
-    public RequestSendEvent(RequestSender sender) {
-        this.sender = sender;
+    public RequestReceiveEvent(RequestEventSink sink) {
+        this.sink = sink;
     }
 
     @Override
     public void apply(NextEventExecution exe) {
-        sender.send(this);
-        exe.apply();
+        sink.setNextEventExecution(exe);
     }
 
     @Override
     public String getCommunicationBody() {
-        return null;
+        return responseBody;
     }
 
     @Override
@@ -47,5 +43,4 @@ public class RequestSendEvent extends AbstractReplayEvent {
     public void setPath(String path) {
         this.path = path;
     }
-
 }

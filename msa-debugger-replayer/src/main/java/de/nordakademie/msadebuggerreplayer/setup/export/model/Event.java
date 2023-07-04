@@ -13,11 +13,14 @@ public class Event {
 
     private EventBody body;
 
-    public Event(Communication type, int lamportTime, List<Header> headers, EventBody body) {
+    private String target;
+
+    public Event(Communication type, int lamportTime, List<Header> headers, EventBody body, String target) {
         this.type = type;
         this.lamportTime = lamportTime;
         this.headers = headers;
         this.body = body;
+        this.target = target;
     }
 
     public Event() {
@@ -53,5 +56,13 @@ public class Event {
 
     public void setBody(EventBody body) {
         this.body = body;
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
+    public void setTarget(String target) {
+        this.target = target;
     }
 }
