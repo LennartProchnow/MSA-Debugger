@@ -4,6 +4,8 @@ public class ResponseEvent {
 
     private String requestId;
 
+    private String body;
+
     public ResponseEvent() {
 
     }
@@ -16,4 +18,11 @@ public class ResponseEvent {
         return this.requestId;
     }
 
+    public String getCommunicationBody() {
+        return body;
+    }
+
+    public void setCommunicationBody(String body) {
+        this.body = body;
+    }
 }

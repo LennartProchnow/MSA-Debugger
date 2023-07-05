@@ -4,6 +4,7 @@ import de.nordakademie.msadebuggerreplayer.core.model.*;
 import de.nordakademie.msadebuggerreplayer.setup.export.ScenarioExportRegistry;
 import de.nordakademie.msadebuggerreplayer.setup.export.model.Communication;
 import de.nordakademie.msadebuggerreplayer.setup.export.model.Event;
+import de.nordakademie.msadebuggerreplayer.setup.export.model.Scenario;
 import de.nordakademie.msadebuggerreplayer.setup.register.MicroserviceRegistry;
 import de.nordakademie.msadebuggerreplayer.setup.register.ServiceConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,12 +31,7 @@ public class ScenarioExecutor {
     @Autowired
     private RequestEventSink requestEventSink;
 
-    public ScenarioQueue prepare(String scenarioId){
-        // Hier dann noch die Queue preparen
-        // die ScenarioEvents werden überführt in ReplayEvents
-        // die Events werden in eine Execution Queue geschrieben
-        // die Execution Queue wird dann zurück gegeben
-        var scenario = scenarioExportRegistry.getScenario(scenarioId);
+    public ScenarioQueue prepare(Scenario scenario){
 
         ScenarioQueue queue = new ScenarioQueue();
 
@@ -47,7 +43,7 @@ public class ScenarioExecutor {
             if (e.getType() == Communication.REQUEST) {
                 requestsToReplay.add(convertScenarioEventToRequestEvent(e));
             } else if (e.getType() == Communication.RESPONSE) {
-                //der hier müsste dann eigentlich in einer eigenen Liste abgefackelt werden
+                //ToDo: der hier müsste dann eigentlich in einer eigenen Liste abgefackelt werden
                 throw new UnsupportedOperationException("not implemented yet");
             } else {
                 throw new IllegalArgumentException(String.format("Events with the CommunicationType: %s are not supported", e.getType()));
@@ -67,59 +63,48 @@ public class ScenarioExecutor {
         // dann soo -> ServiceConfig sourceConfig = microserviceRegistry.getServiceConfig(source);
 
         if(targetConfig == null) {//no registered service is the target Service so executor could be target
-            return createRequestSendEvent(scenarioEvent);
-        } else {
             return createRequestReceiveEvent(scenarioEvent);
+        } else {// service is registered and should be the target of the request
+            return createRequestSendEvent(scenarioEvent, targetConfig);
         }
     }
 
-    private ReplayEvent createRequestReceiveEvent(Event scenarioEvent) {
+    private RequestReceiveEvent createRequestReceiveEvent(Event scenarioEvent) {
         RequestReceiveEvent event = new RequestReceiveEvent(requestEventSink);
         scenarioEvent.getHeaders().forEach(header -> {
             switch (header.key()) {
-                case ":path":
-                    event.setPath(header.value());
-                    break;
-                case ":method":
-                    event.setHttpMethod(HttpMethod.valueOf(header.value()));
-                    break;
-                case ":authority":
-                    event.setServiceName(header.value());
-                    break;
-                case "x-request-id":
-                    event.setRequestId(header.value());
-                    break;
-                default:
+                case ":path" -> event.setPath(header.value());
+                case ":method" -> event.setHttpMethod(header.value());
+                case ":authority" -> event.setServiceName(header.value());
+                case "x-request-id" -> event.setRequestId(header.value());
+                default -> {
+                    //ToDo hier könnten Custom Header hinzugefügt werden
+                }
             }
         });
-        event.setCommunicationBody(scenarioEvent.getBody().body());
+
         event.setLamportTime(scenarioEvent.getLamportTime());
 
         return event;
 
     }
 
-    private RequestSendEvent createRequestSendEvent(Event scenarioEvent){
+    private RequestSendEvent createRequestSendEvent(Event scenarioEvent, ServiceConfig config){
         RequestSendEvent event = new RequestSendEvent(this.sender);
         scenarioEvent.getHeaders().forEach(header -> {
             switch (header.key()) {
-                case ":path":
-                    event.setPath(header.value());
-                    break;
-                case ":method":
-                    event.setHttpMethod(HttpMethod.valueOf(header.value()));
-                    break;
-                case ":authority":
-                    event.setServiceName(header.value());
-                    break;
-                case "x-request-id":
-                    event.setRequestId(header.value());
-                    break;
-                default:
+                case ":path" -> event.setPath(header.value());
+                case ":method" -> event.setHttpMethod(header.value());
+                case ":authority" -> event.setServiceName(header.value());
+                case "x-request-id" -> event.setRequestId(header.value());
+                default -> {
+                    //ToDo hier könnten Custom Header hinzugefügt werden
+                }
             }
         });
         event.setCommunicationBody(scenarioEvent.getBody().body());
         event.setLamportTime(scenarioEvent.getLamportTime());
+        event.setServiceConfig(config);
 
         return event;
     }
@@ -131,11 +116,19 @@ public class ScenarioExecutor {
     public void executeNextEvent(ScenarioQueue queue){
         var nextEvent = queue.getNextEvent();
 
-        Consumer<ScenarioQueue> exec = this::executeNextEvent;
 
+        Consumer<ScenarioQueue> exec = null;
+        if(!queue.isScenarioCompleted()) {
+            exec = this::executeNextEvent;
+        }
         NextEventExecution exe = new NextEventExecution(exec, queue);
 
-        nextEvent.apply(exe);
+        if(nextEvent instanceof RequestSendEvent) {
+            sender.send(nextEvent);
+            exe.apply();
+        }
+
+        //nextEvent.apply(exe);
     }
 
 }

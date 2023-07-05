@@ -2,23 +2,27 @@ package de.nordakademie.msadebuggerreplayer.core.model;
 
 import de.nordakademie.msadebuggerreplayer.core.RequestSender;
 import de.nordakademie.msadebuggerreplayer.setup.export.model.Header;
+import de.nordakademie.msadebuggerreplayer.setup.register.ServiceConfig;
 import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
 public class RequestSendEvent extends AbstractReplayEvent {
 
+    private String type = "RequestSendEvent";
+
     private RequestSender sender;
 
-    private String path;
+    private ServiceConfig config;
 
-    private HttpMethod httpMethod;
-
-
-    //hier müsste dann irgendwie das Recorded Item mit reingehängt werden
+    private String body;
 
     public RequestSendEvent(RequestSender sender) {
         this.sender = sender;
+    }
+
+    public RequestSendEvent(){
+        //default Constructor
     }
 
     @Override
@@ -27,25 +31,19 @@ public class RequestSendEvent extends AbstractReplayEvent {
         exe.apply();
     }
 
-    @Override
+    public void setServiceConfig(ServiceConfig config) {
+        this.config = config;
+    }
+
+    public ServiceConfig getServiceConfig() {
+        return config;
+    }
+
     public String getCommunicationBody() {
-        return null;
+        return body;
     }
 
-    @Override
-    public HttpMethod getHttpMethod() {
-        return httpMethod;
+    public void setCommunicationBody(String body) {
+        this.body = body;
     }
-
-    public void setHttpMethod(HttpMethod httpMethod) {
-        this.httpMethod = httpMethod;
-    }
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-
 }

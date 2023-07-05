@@ -1,6 +1,8 @@
 package de.nordakademie.msadebuggerreplayer.core.model;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import de.nordakademie.msadebuggerreplayer.core.ScenarioQueue;
+import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
@@ -16,18 +18,11 @@ public abstract class AbstractReplayEvent implements ReplayEvent {
 
     private List<ReplayHeader> header;
 
-    private String body;
+    private String path;
 
-    private ScenarioQueue queue;
+    private String httpMethod;
 
-    public boolean isCompleted () {
-        return true;
-    }
-
-    public ScenarioQueue getQueue(){
-        return queue;
-    }
-
+    @Override
     public String getServiceName() {
         return serviceName;
     }
@@ -39,15 +34,6 @@ public abstract class AbstractReplayEvent implements ReplayEvent {
     @Override
     public List<ReplayHeader> getHeader() {
         return header;
-    }
-
-    @Override
-    public String getCommunicationBody() {
-        return body;
-    }
-
-    public void setCommunicationBody(String body) {
-        this.body = body;
     }
 
     public int getLamportTime() {
@@ -66,19 +52,30 @@ public abstract class AbstractReplayEvent implements ReplayEvent {
         this.header = header;
     }
 
-    public String getBody() {
-        return body;
-    }
-
-    public void setBody(String body) {
-        this.body = body;
-    }
-
+    @Override
     public String getRequestId() {
         return requestId;
     }
 
     public void setRequestId(String requestId) {
         this.requestId = requestId;
+    }
+
+
+    @Override
+    public String getHttpMethod() {
+        return httpMethod;
+    }
+
+    public void setHttpMethod(String httpMethod) {
+        this.httpMethod = httpMethod;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 }

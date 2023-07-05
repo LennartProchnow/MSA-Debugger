@@ -7,7 +7,10 @@ import java.util.function.Consumer;
 public record NextEventExecution(Consumer<ScenarioQueue> nextExecution, ScenarioQueue queue) {
 
     public void apply(){
-        nextExecution.accept(queue);
+        if(nextExecution != null) {
+            nextExecution.accept(queue);
+
+        }
     }
 
 }

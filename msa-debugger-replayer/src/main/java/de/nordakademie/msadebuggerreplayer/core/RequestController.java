@@ -15,7 +15,10 @@ public class RequestController {
         System.out.println(str);
         var queue = sink.getCurrentScenarioQueue();
 
+        var currentEvent = queue.getCurrentEvent();
+
         //ToDo entsprechende Response suchen und response zurückgeben
+        var currentResponse = queue.getResponseToRequestId(currentEvent.getRequestId());
 
         //der würde hier blockieren, heißt ich komme wahrscheinlich,
         // um eine asynchrone Eventverarbeitung vielleicht garnicht drum herum

@@ -16,10 +16,10 @@ public class MicroserviceRegisterController {
     @Autowired
     private MicroserviceRegistry registry;
 
-    @PostMapping("/register/{name}")
-    public void register(@PathVariable(name = "name") String name, @RequestBody ServiceConfig config) {
-        registry.register(name, config);
-        logger.info(String.format("service %s registered for next scenario execution", name));
+    @PostMapping("/register/")
+    public void register(@RequestBody ServiceConfig config) {
+        registry.register(config.name(), config);
+        logger.info(String.format("service %s registered for next scenario execution", config.name()));
     }
 
     @PostMapping("/deregister/{name}")
