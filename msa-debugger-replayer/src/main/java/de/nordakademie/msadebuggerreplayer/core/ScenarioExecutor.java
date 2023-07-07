@@ -126,6 +126,8 @@ public class ScenarioExecutor {
         if(nextEvent instanceof RequestSendEvent) {
             sender.send(nextEvent);
             exe.apply();
+        } else {
+            requestEventSink.setNextEventExecution(exe);
         }
 
         //nextEvent.apply(exe);

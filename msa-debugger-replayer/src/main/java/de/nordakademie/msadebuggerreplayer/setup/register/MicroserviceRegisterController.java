@@ -16,7 +16,7 @@ public class MicroserviceRegisterController {
     @Autowired
     private MicroserviceRegistry registry;
 
-    @PostMapping("/register/")
+    @PostMapping("/register")
     public void register(@RequestBody ServiceConfig config) {
         registry.register(config.name(), config);
         logger.info(String.format("service %s registered for next scenario execution", config.name()));

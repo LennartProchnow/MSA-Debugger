@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import de.nordakademie.msadebuggerreplayer.core.ScenarioQueue;
 import org.springframework.http.HttpMethod;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AbstractReplayEvent implements ReplayEvent {
@@ -16,7 +17,7 @@ public abstract class AbstractReplayEvent implements ReplayEvent {
 
     private String serviceName;
 
-    private List<ReplayHeader> header;
+    private List<ReplayHeader> header = new ArrayList<>();
 
     private String path;
 

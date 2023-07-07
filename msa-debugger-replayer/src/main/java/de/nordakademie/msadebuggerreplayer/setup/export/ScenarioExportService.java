@@ -59,8 +59,9 @@ public class ScenarioExportService {
 
     private Scenario mockReadScenario(String id) {
 
+        // Send Request
         String targetService = "example-service";
-        String path = "/example/getRequest";
+        String path = "example/doPostRequest";
         String method = "POST";
         String requestId = UUID.randomUUID().toString();
 
@@ -75,7 +76,34 @@ public class ScenarioExportService {
 
         Event sendRequest = new Event(Communication.REQUEST, 0, Arrays.asList(pathHeader, methodHeader, authorityHeader, requestIdHeader), eventBody, targetService);
 
-        return new Scenario("1234", "TestScenario", Collections.singletonList(sendRequest));
+        // Receive Request
+        String otherTargetService = "other-example-service";
+        String otherPath = "example/send/getRequest";
+        String otherMethod = "GET";
+        String otherRequestId = UUID.randomUUID().toString();
+
+        Header otherPathHeader = new Header(":path", otherPath);
+        Header otherMethodHeader = new Header(":method", otherMethod);
+        Header otherAuthorityHeader = new Header(":authority", otherTargetService);
+        Header otherRequestIdHeader = new Header("x-request-id", otherRequestId);
+
+        String otherBody = "{\"id\":0,\"author\":\"William Shakespeare\",\"year\":1595,\"type\":\"paperback\",\"pages\":200,\"publisher\":\"PublisherA\",\"language\":\"English\",\"ISBN-10\":\"1234567890\",\"ISBN-13\":\"123-1234567890\"}";
+
+        EventBody otherEventBody = new EventBody(ContentType.APPLICATION_JSON, "1234", otherBody);
+
+        Event receiveRequest = new Event(Communication.REQUEST, 1, Arrays.asList(otherPathHeader, otherMethodHeader, otherAuthorityHeader, otherRequestIdHeader), otherEventBody, otherTargetService);
+
+        // Send Response
+        String responseTargetService = "other-example-service";
+        String contentType = "application/json";
+
+        String responseBody = "{\"id\":0,\"author\":\"William Shakespeare\",\"year\":1595,\"type\":\"paperback\",\"pages\":200,\"publisher\":\"PublisherA\",\"language\":\"English\",\"ISBN-10\":\"1234567890\",\"ISBN-13\":\"123-1234567890\"}";
+
+        EventBody responseEventBody = new EventBody(ContentType.APPLICATION_JSON, "12345", responseBody);
+
+        Event responseEvent = new Event(Communication.RESPONSE, 2, Collections.EMPTY_LIST, responseEventBody, responseTargetService);
+
+        return new Scenario("1234", "TestScenario", Arrays.asList(sendRequest, receiveRequest, responseEvent));
 
     }
 }

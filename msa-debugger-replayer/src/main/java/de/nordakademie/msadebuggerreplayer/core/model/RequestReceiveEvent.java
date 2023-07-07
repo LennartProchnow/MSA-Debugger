@@ -4,8 +4,6 @@ import de.nordakademie.msadebuggerreplayer.core.RequestEventSink;
 
 public class RequestReceiveEvent extends AbstractReplayEvent {
 
-    private String type = "RequestReceiveEvent";
-
     private RequestEventSink sink;
 
     public RequestReceiveEvent(RequestEventSink sink) {

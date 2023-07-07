@@ -1,8 +1,10 @@
 package de.nordakademie.msadebuggerreplayer.core;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 public class RequestController {
@@ -10,9 +12,11 @@ public class RequestController {
     @Autowired
     private RequestEventSink sink;
 
-    @GetMapping
-    public String performGetRequest(String str) {
-        System.out.println(str);
+    @RequestMapping("/**")
+    public String performGetRequest(HttpServletRequest request) {
+        //aus der Request bekomme ich auch den Path raus, mit dem ich die Request validieren kann
+        //System.out.println(request);
+        String path = request.getRequestURL().toString();
         var queue = sink.getCurrentScenarioQueue();
 
         var currentEvent = queue.getCurrentEvent();
