@@ -32,6 +32,9 @@ public class RequestRecord {
     @JsonAlias("x-b3-parentspanid")
     private String parentSpanId;
 
+    @JsonAlias("x-communication-id")
+    private String communicationId;
+
     @JsonAlias("body")
     private String body;
 
@@ -121,5 +124,13 @@ public class RequestRecord {
 
     public void setBody(String body) {
         this.body = body;
+    }
+
+    public String getCommunicationId() {
+        return communicationId;
+    }
+
+    public void setCommunicationId(String communicationId) {
+        this.communicationId = communicationId;
     }
 }

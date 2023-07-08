@@ -10,6 +10,9 @@ public class ResponseRecord {
     @JsonAlias(":content-type")
     private String contentType;
 
+    @JsonAlias("x-communication-id")
+    private String communicationId;
+
     private String body;
 
     public ResponseRecord(String status, String contentType, String body) {
@@ -44,5 +47,13 @@ public class ResponseRecord {
 
     public void setBody(String body) {
         this.body = body;
+    }
+
+    public String getCommunicationId() {
+        return communicationId;
+    }
+
+    public void setCommunicationId(String communicationId) {
+        this.communicationId = communicationId;
     }
 }

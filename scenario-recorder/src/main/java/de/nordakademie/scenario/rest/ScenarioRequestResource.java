@@ -24,15 +24,18 @@ public class ScenarioRequestResource {
     ScenarioService scenarioService;
 
     @POST
-    @Path("/{traceId}")
     @Transactional
-    public String addRequest(@PathParam("traceId") String traceId, @NotNull RequestRecord request) {
+    public String addRequest(@NotNull RequestRecord request) {
+        System.out.println("Request start");
+        System.out.println(request.getRequestId());
+        System.out.println(request.getAuthority());
+        System.out.println(request.getPath());
         var scenario = scenarioService.getActiveScenario();
 
         var event = new Event();
 
         event.setType(Communication.REQUEST);
-        var requestId = new Header("requestId", request.getRequestId());
+        var communicationId = new Header("x-communication-id", request.getCommunicationId());
         var authority = new Header("authority", request.getAuthority());
 
         var body = new EventBody();
@@ -45,7 +48,7 @@ public class ScenarioRequestResource {
 
         event.setLamportTime(scenario.nextLamportTime());
 
-        event.addHeader(requestId);
+        event.addHeader(communicationId);
 
         event.addHeader(authority);
 
