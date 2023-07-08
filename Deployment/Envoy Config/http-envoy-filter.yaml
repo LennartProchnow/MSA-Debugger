@@ -25,67 +25,7 @@ spec:
             "@type": "type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua"
             inlineCode: |
               function envoy_on_request(request_handle)
-                local headers = request_handle:headers()
-                
-                local headersMap = {}
-                local headersPrint = "{"
-                for key, value in pairs(headers) do
-                  headersMap[key] = value
-                  if key == ":authority" then
-                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
-                  end
-                  if key == ":path" then
-                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
-                  end
-                  if key == ":method" then
-                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
-                  end
-                  if key == ":scheme" then
-                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
-                  end
-                  if key == "x-request-id" then
-                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
-                  end
-                  if key == "x-b3-traceid" then
-                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
-                  end
-                  if key == "x-b3-spanid" then
-                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
-                  end
-                  if key == "x-b3-parentspanid" then
-                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
-                  end
-                end
-                headersPrint = headersPrint:sub(1,-2) .. "}"                  
-                local requestBody = ""
-                for chunk in request_handle:bodyChunks() do
-                  if (chunk:length() > 0) then
-                    requestBody = requestBody .. chunk:getBytes(0, chunk:length())
-                  end
-                end
-                if (requestBody == nil or requestBody == "") then
-                  requestBody = "moin leider ist der Body null"
-                end
-                local h = request_handle:streamInfo:requestedServerName()
-                request_handle:logCritical("REQUEST SERVERNAME: " h)
-
-                local traceid = headersMap["x-b3-traceid"] 
-                if traceid ~= nil then
-                  request_handle:logCritical("traceID vorhanden")
-                  local debugHeaders, debugBody = request_handle:httpCall(
-                    "debugger_cluster",
-                    {
-                      [":method"] = "POST",
-                      [":path"] = "/scenario/request/" .. traceid,
-                      [":authority"] = "scenario-recorder.debugger.svc.cluster.local"
-                    },
-                    "request: " .. headersPrint,
-                    5000)
-                  for dkey, dvalue in pairs(debugHeaders) do
-                    request_handle:logCritical("debug header: " .. dkey)
-                    request_handle:logCritical("debug value: " .. dvalue)
-                  end 
-                end                 
+                                 
               end
   - applyTo: CLUSTER
     match:
@@ -136,58 +76,125 @@ spec:
             "@type": "type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua"
             inlineCode: |
               function envoy_on_request(request_handle)
-                request_handle:logCritical("PEEEEEEEEEEEEENIS")               
+                local headers = request_handle:headers()
+                
+                -- TODO: here the relevant headers should be extracted and the rest should be parsed into a list
+                local headersPrint = ""
+                for key, value in pairs(headers) do
+                  if key == ":authority" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                  if key == ":path" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                  if key == ":method" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                  if key == ":scheme" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                  if key == "x-request-id" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                  if key == "x-b3-traceid" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                  if key == "x-b3-spanid" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                  if key == "x-b3-parentspanid" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                end
+                -- remove last characters like the last ,
+                headersPrint = headersPrint:sub(1,-2)
+
+                -- create communication ID
+                local random = math.random
+                local function uuid()
+                    local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+                    return string.gsub(template, '[xy]', function (c)
+                        local v = (c == 'x') and random(0, 0xf) or random(8, 0xb)
+                        return string.format('%x', v)
+                    end)
+                end
+
+                local communicationId = uuid()
+                local streamInfo = request_handle:streamInfo()
+                streamInfo:dynamicMetadata():set("envoy.lua", "request.communicationId", communicationId)
+
+                local communicationIdPrint = '\"x-communication-id\":\"' .. communicationId .. '\"'
+
+                -- prepare Request Body            
+                local requestBody = '\"body\":\"'
+                for chunk in request_handle:bodyChunks() do
+                  if (chunk:length() > 0) then
+                    requestBody = requestBody .. chunk:getBytes(0, chunk:length())
+                  end
+                end
+                requestBody = requestBody .. "\""
+
+                -- communication with scenario recorder
+                if communicationId ~= nil then
+                  local debugHeaders, debugBody = request_handle:httpCall(
+                    "debugger_cluster",
+                    {
+                      [":method"] = "POST",
+                      [":path"] = "/scenario/request/",
+                      [":authority"] = "scenario-recorder.debugger.svc.cluster.local",
+                      ["Content-Type"] = "application/json"
+                    },
+                    "{" .. headersPrint .. "," .. communicationIdPrint .. "," .. requestBody .. "}",
+                    5000,
+                    true
+                  ) 
+                end              
               end
 
               function envoy_on_response(response_handle)
                 local headers = response_handle:headers()
-                local headersMap = {}
+                
+                -- TODO: here the relevant headers should be extracted and the rest should be parsed into a list
                 local headersPrint = ""
                 for key, value in pairs(headers) do
-                  headersMap[key] = value
-                  if headersPrint == "" then
-                    headersPrint = headersPrint .. key .. ":" .. value 
-                  else
-                    headersPrint = headersPrint .. ", " .. key .. ":" .. value
+                  if key == ":status" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
                   end
-                end                
-                                   
-                local responseBody = ""
+                  if key == ":content-type" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
+                end
+                -- remove last characters like the last ,
+                headersPrint = headersPrint:sub(1,-2)
+
+                -- create communication ID
+                local streamInfo = response_handle:streamInfo()
+                local communicationId = streamInfo:dynamicMetadata():get("envoy.lua")["request.communicationId"]
+                local communicationIdPrint = '\"x-communication-id\":\"' .. communicationId .. '\"'
+
+                -- prepare Response Body            
+                local responseBody = '\"body\":\"'
                 for chunk in response_handle:bodyChunks() do
                   if (chunk:length() > 0) then
                     responseBody = responseBody .. chunk:getBytes(0, chunk:length())
                   end
                 end
+                responseBody = responseBody .. "\""
 
-                if (responseBody == nil or responseBody == "") then
-                  responseBody = "moin leider ist der Body null"
-                end
-
-                local h = response_handle:streamInfo:requestedServerName()
-                response_handle:logCritical("RESPONSE SERVERNAME: " h)
-
-
-                local publicTraceID = response_handle:streamInfo():dynamicMetadata():get("envoy.lua","response_id")
-                if (publicTraceID == nil or publicTraceID == "") then
-                  publicTraceID = "penis"
-                end
-
-                local rep = "response: " .. headersPrint .. " request-ID: " .. publicTraceID .. " body:" .. responseBody
-
-                local debugHeaders, debugBody = response_handle:httpCall(
-                  "debugger_cluster",
-                  {
-                    [":method"] = "POST",
-                    [":path"] = "/scenario/response/",
-                    [":authority"] = "scenario-recorder.debugger.svc.cluster.local"
-                  },
-                  rep,
-                  5000
-                )
-
-                for dkey, dvalue in pairs(debugHeaders) do
-                  response_handle:logCritical("debug header: " .. dkey)
-                  response_handle:logCritical("debug value: " .. dvalue)
+                -- communication with scenario recorder
+                if communicationId ~= nil then
+                  local debugHeaders, debugBody = response_handle:httpCall(
+                    "debugger_cluster",
+                    {
+                      [":method"] = "POST",
+                      [":path"] = "/scenario/response/",
+                      [":authority"] = "scenario-recorder.debugger.svc.cluster.local",
+                      ["Content-Type"] = "application/json"
+                    },
+                    "{" .. headersPrint .. "," .. communicationIdPrint .. "," .. responseBody .. "}",
+                    5000,
+                    true
+                  ) 
                 end
               end
   - applyTo: CLUSTER
