@@ -27,6 +27,10 @@ spec:
               function envoy_on_request(request_handle)
                                  
               end
+
+              function envoy_on_response(response_handle)
+                                 
+              end
   - applyTo: CLUSTER
     match:
       context: SIDECAR_INBOUND
@@ -105,8 +109,12 @@ spec:
                   if key == "x-b3-parentspanid" then
                     headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
                   end
+                  if key == "x-source-service-name" then
+                    headersPrint = headersPrint .. "\"" .. key .. "\"" .. ":" ..  "\"" .. value .. "\"" .. ","
+                  end
                 end
                 -- remove last characters like the last ,
+                headersPrint = headersPrint .. "\"" .. "x-source-service-name" .. "\"" .. ":" ..  "\"" .. "mockService" .. "\"" .. ","
                 headersPrint = headersPrint:sub(1,-2)
 
                 -- create communication ID
@@ -127,10 +135,15 @@ spec:
 
                 -- prepare Request Body            
                 local requestBody = '\"body\":\"'
+                local resBody = ""
                 for chunk in request_handle:bodyChunks() do
                   if (chunk:length() > 0) then
-                    requestBody = requestBody .. chunk:getBytes(0, chunk:length())
+                    resBody = resBody .. chunk:getBytes(0, chunk:length())
                   end
+                end
+                if resbody ~= nil then
+                  resBody = resBody:gsub('\"','\\"')
+                  requestBody = requestBody .. resBody
                 end
                 requestBody = requestBody .. "\""
 
@@ -140,7 +153,7 @@ spec:
                     "debugger_cluster",
                     {
                       [":method"] = "POST",
-                      [":path"] = "/scenario/request/",
+                      [":path"] = "/scenario/request",
                       [":authority"] = "scenario-recorder.debugger.svc.cluster.local",
                       ["Content-Type"] = "application/json"
                     },
@@ -174,10 +187,15 @@ spec:
 
                 -- prepare Response Body            
                 local responseBody = '\"body\":\"'
+                local repBody = ""
                 for chunk in response_handle:bodyChunks() do
                   if (chunk:length() > 0) then
-                    responseBody = responseBody .. chunk:getBytes(0, chunk:length())
+                    repBody = repBody .. chunk:getBytes(0, chunk:length())
                   end
+                end
+                if repBody ~= nil then
+                  repBody = repBody:gsub('\"','\\"')
+                  responseBody = responseBody .. repBody
                 end
                 responseBody = responseBody .. "\""
 
@@ -187,14 +205,14 @@ spec:
                     "debugger_cluster",
                     {
                       [":method"] = "POST",
-                      [":path"] = "/scenario/response/",
+                      [":path"] = "/scenario/response",
                       [":authority"] = "scenario-recorder.debugger.svc.cluster.local",
                       ["Content-Type"] = "application/json"
                     },
                     "{" .. headersPrint .. "," .. communicationIdPrint .. "," .. responseBody .. "}",
                     5000,
                     true
-                  ) 
+                  )
                 end
               end
   - applyTo: CLUSTER
