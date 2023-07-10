@@ -46,6 +46,8 @@ public class ScenarioRequestResource {
 
         event.setBody(body);
 
+        event.setSourceService(request.getSource());
+
         event.setLamportTime(scenario.nextLamportTime());
 
         event.addHeader(communicationId);

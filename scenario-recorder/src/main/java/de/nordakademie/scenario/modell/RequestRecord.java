@@ -35,6 +35,9 @@ public class RequestRecord {
     @JsonAlias("x-communication-id")
     private String communicationId;
 
+    @JsonAlias("x-source-service-name")
+    private String source;
+
     @JsonAlias("body")
     private String body;
 
@@ -132,5 +135,13 @@ public class RequestRecord {
 
     public void setCommunicationId(String communicationId) {
         this.communicationId = communicationId;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 }
