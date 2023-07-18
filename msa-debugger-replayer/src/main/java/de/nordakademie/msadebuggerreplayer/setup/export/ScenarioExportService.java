@@ -1,7 +1,6 @@
 package de.nordakademie.msadebuggerreplayer.setup.export;
 
 import de.nordakademie.msadebuggerreplayer.setup.export.model.*;
-import de.nordakademie.msadebuggerreplayer.setup.register.ServiceConfig;
 import jakarta.annotation.Nonnull;
 import org.jboss.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,15 +9,13 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.UUID;
 
-@RestController("/replay/setup/scenario")
+@Service
 public class ScenarioExportService {
 
     Logger logger = Logger.getLogger(ScenarioExportService.class);
@@ -30,12 +27,10 @@ public class ScenarioExportService {
     private ScenarioExportRegistry registry;
 
 
-
-    @PostMapping("/{id}")
     public void exportScenario(@Nonnull String id) {
 
-        //var export = readScenario(id);
-        var export = mockReadScenario(id);
+        var export = readScenario(id);
+        //var export = mockReadScenario(id);
         if(export == null) {
             logger.warn(String.format("No scenario with the id: %s found", id));
         } else {
@@ -48,7 +43,7 @@ public class ScenarioExportService {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
 
-        String uri = uriScenarioRecorder + "/" + id;
+        String uri = "http://" + uriScenarioRecorder + "/" + id;
 
         HttpEntity<String> requestEntity = new HttpEntity<>("", headers);
 
@@ -96,12 +91,16 @@ public class ScenarioExportService {
         // Send Response
         String responseTargetService = "other-example-service";
         String contentType = "application/json";
+        String status = "200";
+
+        Header responseStatusHeader = new Header(":status", status);
+        Header responseRequestIdHeader = new Header("x-request-id", otherRequestId);
 
         String responseBody = "{\"id\":0,\"author\":\"William Shakespeare\",\"year\":1595,\"type\":\"paperback\",\"pages\":200,\"publisher\":\"PublisherA\",\"language\":\"English\",\"ISBN-10\":\"1234567890\",\"ISBN-13\":\"123-1234567890\"}";
 
         EventBody responseEventBody = new EventBody(ContentType.APPLICATION_JSON, "12345", responseBody);
 
-        Event responseEvent = new Event(Communication.RESPONSE, 2, Collections.EMPTY_LIST, responseEventBody, responseTargetService);
+        Event responseEvent = new Event(Communication.RESPONSE, 2, Arrays.asList(responseRequestIdHeader, responseStatusHeader), responseEventBody, responseTargetService);
 
         return new Scenario("1234", "TestScenario", Arrays.asList(sendRequest, receiveRequest, responseEvent));
 
