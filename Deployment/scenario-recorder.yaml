@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
       - name: scenario-recorder
-        image: debugger/scenario-recorder:latest
-        imagePullPolicy: Never # Bei Always will er anscheinend immer an ein Repository gehen
+        image: lennartprochnow/scenario-recorder
+        imagePullPolicy: Always
         resources:
           limits:
             memory: "512Mi"
