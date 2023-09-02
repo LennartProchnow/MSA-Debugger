@@ -41,7 +41,6 @@ public class ScenarioResponseResource {
         event.setType(Communication.RESPONSE);
         var status = new Header(":status", response.getStatus());
         var contentType = new Header("content-type", response.getContentType());
-        var communicationId = new Header("x-communication-id", response.getCommunicationId());
 
         var body = new EventBody();
         //ToDo: das müsste hier dann eigentlich aus den Headern rausgelesen werden,
@@ -51,13 +50,13 @@ public class ScenarioResponseResource {
 
         event.setBody(body);
 
+        event.setCommunicationId(response.getCommunicationId());
+
         event.setLamportTime(scenario.nextLamportTime());
 
         event.addHeader(status);
 
         event.addHeader(contentType);
-
-        event.addHeader(communicationId);
 
         event.setScenario(scenario);
 

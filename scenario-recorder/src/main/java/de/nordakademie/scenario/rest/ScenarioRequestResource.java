@@ -35,7 +35,6 @@ public class ScenarioRequestResource {
         var event = new Event();
 
         event.setType(Communication.REQUEST);
-        var communicationId = new Header("x-communication-id", request.getCommunicationId());
         var authority = new Header("authority", request.getAuthority());
 
         var body = new EventBody();
@@ -46,22 +45,19 @@ public class ScenarioRequestResource {
 
         event.setBody(body);
 
+        event.setCommunicationId(request.getCommunicationId());
+
         event.setScenario(scenario);
 
         event.setSourceService(request.getSource());
 
         event.setLamportTime(scenario.nextLamportTime());
 
-        event.addHeader(communicationId);
-
         event.addHeader(authority);
 
         scenario.addEvent(event);
 
         em.persist(event);
-
-
-        var read = em.find(Scenario.class, scenario.getId());
 
         return String.valueOf(scenario.getId());
     }

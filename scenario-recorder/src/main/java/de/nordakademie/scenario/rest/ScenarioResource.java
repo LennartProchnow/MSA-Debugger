@@ -26,7 +26,6 @@ import java.util.List;
 @ApplicationScoped
 public class ScenarioResource {
 
-
     @Inject
     EntityManager em;
 

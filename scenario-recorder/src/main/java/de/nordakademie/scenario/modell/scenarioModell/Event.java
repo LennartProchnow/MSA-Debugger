@@ -15,14 +15,6 @@ public class Event {
     @GeneratedValue(generator = "eventSeq")
     private Long id;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "scenario_id", nullable = false)
@@ -31,6 +23,8 @@ public class Event {
     private Communication type;
 
     private int lamportTime;
+
+    private String communicationId;
 
     @OneToMany(orphanRemoval = true, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "FK_EVENT_ID")
@@ -52,6 +46,21 @@ public class Event {
 
     public Event() {
         //no args Constructor
+    }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getCommunicationId() {
+        return communicationId;
+    }
+
+    public void setCommunicationId(String communicationId) {
+        this.communicationId = communicationId;
     }
 
     public int getLamportTime() {
