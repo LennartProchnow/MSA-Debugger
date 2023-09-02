@@ -14,8 +14,11 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 @ApplicationScoped
+@Produces(MediaType.APPLICATION_JSON)
 @Path("/scenario/response")
 public class ScenarioResponseResource {
 
@@ -56,10 +59,11 @@ public class ScenarioResponseResource {
 
         event.addHeader(communicationId);
 
+        event.setScenario(scenario);
+
         scenario.addEvent(event);
 
-        em.merge(scenario);
-        em.flush();
+        em.persist(event);
 
         return String.valueOf(scenario.getId());
     }

@@ -11,11 +11,21 @@ import java.util.*;
 public class Event {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private long Id;
+    @SequenceGenerator(name = "eventSeq", sequenceName = "event_id_seq", allocationSize = 1, initialValue = 1)
+    @GeneratedValue(generator = "eventSeq")
+    private Long id;
 
-    @ManyToOne
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "scenario_id", nullable = false)
     private Scenario scenario;
 
     private Communication type;
@@ -36,7 +46,7 @@ public class Event {
 
     public Event(int lamportTime, List<Header> headers, EventBody body) {
         this.lamportTime = lamportTime;
-        this.headers = headers;
+        this.headers.addAll(headers);
         this.body = body;
     }
 
@@ -53,7 +63,6 @@ public class Event {
     }
 
     public void addHeader(Header header) {
-        header.setOwner(this);
         headers.add(header);
     }
 
@@ -111,26 +120,15 @@ public class Event {
         if (o == null || getClass() != o.getClass()) return false;
 
         Event event = (Event) o;
-
-        if (Id != event.Id) return false;
-        if (lamportTime != event.lamportTime) return false;
-        if (!Objects.equals(scenario, event.scenario)) return false;
-        if (type != event.type) return false;
-        if (!Objects.equals(headers, event.headers)) return false;
-        if (!Objects.equals(body, event.body)) return false;
-        if (!Objects.equals(sourceService, event.sourceService))
-            return false;
-        return Objects.equals(destinationService, event.destinationService);
+        return id == event.id;
     }
 
     @Override
     public int hashCode() {
-        int result = (int) (Id ^ (Id >>> 32));
+        int result = (int) (id ^ (id >>> 32));
         result = 31 * result + (scenario != null ? scenario.hashCode() : 0);
         result = 31 * result + (type != null ? type.hashCode() : 0);
         result = 31 * result + lamportTime;
-        result = 31 * result + (headers != null ? headers.hashCode() : 0);
-        result = 31 * result + (body != null ? body.hashCode() : 0);
         result = 31 * result + (sourceService != null ? sourceService.hashCode() : 0);
         result = 31 * result + (destinationService != null ? destinationService.hashCode() : 0);
         return result;
@@ -139,12 +137,7 @@ public class Event {
     @Override
     public String toString() {
         return "Event{" +
-                "Id=" + Id +
-                ", scenario=" + scenario +
-                ", type=" + type +
-                ", lamportTime=" + lamportTime +
-                ", headers=" + headers +
-                ", body=" + body +
+                "Id=" + id +
                 ", sourceService='" + sourceService + '\'' +
                 ", destinationService='" + destinationService + '\'' +
                 '}';

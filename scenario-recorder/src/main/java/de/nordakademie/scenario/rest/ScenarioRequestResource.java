@@ -12,7 +12,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
-@Produces(MediaType.TEXT_PLAIN)
+@Produces(MediaType.APPLICATION_JSON)
 @Path("/scenario/request")
 @ApplicationScoped
 public class ScenarioRequestResource {
@@ -46,6 +46,8 @@ public class ScenarioRequestResource {
 
         event.setBody(body);
 
+        event.setScenario(scenario);
+
         event.setSourceService(request.getSource());
 
         event.setLamportTime(scenario.nextLamportTime());
@@ -56,8 +58,7 @@ public class ScenarioRequestResource {
 
         scenario.addEvent(event);
 
-        em.merge(scenario);
-        em.flush();
+        em.persist(event);
 
 
         var read = em.find(Scenario.class, scenario.getId());

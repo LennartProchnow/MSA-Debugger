@@ -3,8 +3,6 @@ package de.nordakademie.scenario.modell.scenarioModell;
 import de.nordakademie.scenario.modell.ContentType;
 import jakarta.persistence.*;
 
-import java.util.UUID;
-
 @Entity
 @Table(name = "EVENTBODY")
 public class EventBody {
@@ -13,24 +11,16 @@ public class EventBody {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private long Id;
 
-    @OneToOne(mappedBy = "body", fetch = FetchType.EAGER)
-    private Event owner;
-    //Diese Information muss wahrscheinlich hier raus und in die einbettende Klasse
-
     private ContentType contentType;
-
-    private final String bodyId;
 
     @Lob
     private String body;
 
-    public EventBody(ContentType contentType, String bodyId) {
+    public EventBody(ContentType contentType) {
         this.contentType = contentType;
-        this.bodyId = bodyId;
     }
 
     public EventBody() {
-        bodyId = UUID.randomUUID().toString();
         //no args constructor
     }
 
@@ -46,14 +36,23 @@ public class EventBody {
         return body;
     }
 
-    //ToDo: Ich könnte in diesem Modell lediglich die obere getBody Methode verwenden und für das Nachladen
-    // ein neues Modell bauen, welches diese Methode verwendet
-    //public String getPlainBody(){
-    //    return this.body;
-    //}
 
     public void setBody(String body){
         this.body = body;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        EventBody eventBody = (EventBody) o;
+
+        return Id == eventBody.Id;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (Id ^ (Id >>> 32));
+    }
 }

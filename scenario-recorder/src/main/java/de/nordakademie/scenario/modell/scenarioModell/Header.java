@@ -11,13 +11,8 @@ public class Header {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
-    @ManyToOne
-    @JoinColumn(name = "oid", nullable = false)
-    @JsonIgnore
-    private Event owner;
-
-    public void setOwner(Event owner) {
-        this.owner = owner;
+    public long getId(){
+        return this.id;
     }
 
     @Column(name = "HeaderKey")
@@ -49,5 +44,20 @@ public class Header {
 
     public void setHeaderValue(String value) {
         this.headerValue = value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Header header = (Header) o;
+
+        return id == header.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (id ^ (id >>> 32));
     }
 }

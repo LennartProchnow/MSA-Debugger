@@ -3,6 +3,7 @@ package de.nordakademie.scenario.rest;
 import de.nordakademie.scenario.modell.scenarioModell.EventBody;
 import de.nordakademie.scenario.modell.scenarioModell.Scenario;
 import de.nordakademie.scenario.services.ScenarioService;
+import io.smallrye.common.annotation.Blocking;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -11,6 +12,8 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 import org.jboss.logging.Logger;
 
 import java.util.List;
@@ -19,6 +22,7 @@ import java.util.List;
  * With this API it should be possible to export a scenaio
  */
 @Path("scenario")
+@Produces(MediaType.APPLICATION_JSON)
 @ApplicationScoped
 public class ScenarioResource {
 
@@ -40,7 +44,6 @@ public class ScenarioResource {
         Scenario s = new Scenario();
         s.setName(name);
         em.persist(s);
-        em.flush();
         scenarioService.setActiveScenario(s);
         logger.info("start recording of Scenario: " + s.getId());
         return String.valueOf(s.getId());
@@ -58,7 +61,8 @@ public class ScenarioResource {
     @GET
     @Path("/{scenarioId}")
     @Transactional
-    public Scenario getScenario(long scenarioId){
+    @Produces(MediaType.APPLICATION_JSON)
+    public Scenario getScenario(long scenarioId) {
         var scenario = em.find(Scenario.class, scenarioId);
         return scenario;
     }

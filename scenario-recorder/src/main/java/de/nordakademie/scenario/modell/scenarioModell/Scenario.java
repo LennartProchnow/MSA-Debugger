@@ -15,8 +15,7 @@ public class Scenario {
 
     private String name;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "scenario")
-    //@JoinColumn(name = "FK_SCENARIO_ID")
+    @OneToMany(mappedBy = "scenario")
     private List<Event> events = new ArrayList<>();
 
     public Scenario(){
@@ -33,17 +32,12 @@ public class Scenario {
 
     public List<Event> addEvent(Event event) {
         this.events.add(event);
-        event.setScenario(this);
         return this.events;
     }
 
     public int nextLamportTime(){
         return events.size();
     }
-
-    /*public List<String> getAllBodyIds(){
-        return requests.stream().map(ScenarioRequest::getBody).map(EventBody::getBody).toList();
-    }*/
 
     public String getName() {
         return name;
