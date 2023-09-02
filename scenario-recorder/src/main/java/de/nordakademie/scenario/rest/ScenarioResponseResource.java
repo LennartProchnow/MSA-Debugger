@@ -16,6 +16,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 @Produces(MediaType.APPLICATION_JSON)
@@ -28,12 +29,11 @@ public class ScenarioResponseResource {
     @Inject
     EntityManager em;
 
+    private static final Logger logger = Logger.getLogger(ScenarioResponseResource.class);
+
     @POST
     @Transactional
     public String addResponse(@NotNull ResponseRecord response){
-        System.out.println("Request start");
-        System.out.println(response.getCommunicationId());
-
         var scenario = scenarioService.getActiveScenario();
 
         var event = new Event();
@@ -43,8 +43,6 @@ public class ScenarioResponseResource {
         var contentType = new Header("content-type", response.getContentType());
 
         var body = new EventBody();
-        //ToDo: das müsste hier dann eigentlich aus den Headern rausgelesen werden,
-        // oder halt per Default auf Plain Text gesetzt werden
         body.setContentType(ContentType.getEnum(response.getContentType()));
         body.setBody(response.getBody());
 
@@ -63,6 +61,7 @@ public class ScenarioResponseResource {
         scenario.addEvent(event);
 
         em.persist(event);
+        logger.info(String.format("recorded response: {communicationId: %s}", response.getCommunicationId()));
 
         return String.valueOf(scenario.getId());
     }
