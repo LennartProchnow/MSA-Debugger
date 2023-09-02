@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+  namespace: debugger
+spec: # specification for deployment resource
+  selector:
+    matchLabels:
+      app: mariadb
+  template: # blueprint for Pod
+    metadata:
+      labels:
+        app: mariadb # service will look for this label
+    spec: # specification for Pod
+      containers:
+      - name: mariadb
+        image: mariadb
+        ports:
+        - containerPort: 3306 #default one
+        env:
+        - name: MARIADB_ROOT_PASSWORD
+          value: secret
+        - name: MARIADB_DATABASE
+          value: SCENARIO_DB
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+  namespace: debugger
+spec:
+  type: NodePort
+  selector:
+    app: mariadb
+  ports:
+  - port: 3306
+    targetPort: 3306
