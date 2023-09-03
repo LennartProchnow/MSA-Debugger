@@ -50,3 +50,40 @@ In der Wiedergabephase wird die Kommunikation eingespielt, sodass das Verhalten 
 Hierfür muss der Microservice so konfiguriert werden, dass alle Requests an den Executor versendet werden.
 
 ``POST``:``localhost:8081/execute``
+````json
+{
+  "eventsToReplay": [
+    {
+      "class": "RequestSendEvent",
+      "lamportTime": 0,
+      "requestId": "54279c8a-5145-452f-8622-b10477570935",
+      "serviceName": "example-service",
+      "header": [],
+      "path": "example/doPostRequest",
+      "httpMethod": "POST",
+      "communicationBody": "{\"id\":0,\"author\":\"William Shakespeare\",\"year\":1595,\"type\":\"paperback\",\"pages\":200,\"publisher\":\"PublisherA\",\"language\":\"English\",\"ISBN-10\":\"1234567890\",\"ISBN-13\":\"123-1234567890\"}",
+      "serviceConfig": {
+        "name": "example-service",
+        "hostUri": "localhost:8082",
+        "fullQualifiedPath": "localhost:8082/"
+      }
+    },
+    {
+      "class": "RequestReceiveEvent",
+      "lamportTime": 1,
+      "requestId": "8968ac79-b664-424d-81e3-deb86021d44a",
+      "serviceName": "other-example-service",
+      "header": [],
+      "path": "example/send/getRequest",
+      "httpMethod": "GET"
+    }
+  ],
+  "responses": [
+    {
+      "requestId": "8968ac79-b664-424d-81e3-deb86021d44a",
+      "status": "200",
+      "body": "{\"id\":0,\"author\":\"William Shakespeare\",\"year\":1595,\"type\":\"paperback\",\"pages\":200,\"publisher\":\"PublisherA\",\"language\":\"English\",\"ISBN-10\":\"1234567890\",\"ISBN-13\":\"123-1234567890\"}"
+    }
+  ]
+}
+````
