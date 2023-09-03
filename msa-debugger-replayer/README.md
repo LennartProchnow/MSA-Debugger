@@ -2,7 +2,7 @@
 
 Dieser Scenario-Executor dient der Simulation der Microservice Anwendung und dem Einspielen der aufgenommenen Kommunikation.
 Hierfür muss der Scenario-Executor lokal in einer Entwicklungsumgebung gestartet werden.
-
+Dies benötigt eine Java 17 Version.
 
 ``mvn spring-boot:run``
 
