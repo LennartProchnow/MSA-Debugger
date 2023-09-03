@@ -1,70 +1,71 @@
-# scenario-recorder
+# Scenario-Recorder
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+Der Scenario-Recorder dient der Speicherung und der Aufnahme der Kommunikation innerhalb der Microservice-Anwendung in Form eines Ausführungsszenarios.
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+## Lokales Starten des Scenario-Recorders
 
-## Running the application in dev mode
-
-You can run your application in dev mode that enables live coding using:
+Der Scenario-Recorder kann folgender Maßen gestartet werden.
 ```shell script
 ./mvnw compile quarkus:dev
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at http://localhost:8080/q/dev/.
+Dies benötigt eine Java 17 Version.
 
-## Packaging and running the application
+Zum Starten muss eine MariaDB gestartet werden:
+``docker pull mariadb``
 
-The application can be packaged using:
-```shell script
-./mvnw package
-```
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+gestartet werden muss die MariaDB mit folgenden Parametern:
+- Port: 3306
+- DBName: SCENARIO_DB
+- root_password: secret
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
+Anschließend fährt der Scenario-Recorder lokal hoch und hörcht auf Port 8080. 
+Dies kann in der ``scr/main/resources/application.properties`` Datei umkonfiguriert werden. 
 
-If you want to build an _über-jar_, execute the following command:
-```shell script
-./mvnw package -Dquarkus.package.type=uber-jar
-```
+## Nutzung
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+**Starten der Aufnahme**
 
-## Creating a native executable
+Das Starten der Aufnahme der Kommunikation zwischen den Microservices muss manuell angestoßen werden:
 
-You can create a native executable using: 
-```shell script
-./mvnw package -Pnative
-```
+``POST``:``localhost:8080/scenario/record/start``
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using: 
-```shell script
-./mvnw package -Pnative -Dquarkus.native.container-build=true
-```
+Anschließend können Requests und Responses persistiert werden.
 
-You can then execute your native executable with: `./target/scenario-recorder-1.0.0-SNAPSHOT-runner`
+**Aufnehmen von Requests**
 
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/maven-tooling.
+``POST``:``localhost:8080/scenario/request/``
+````json
+{
+  ":authority":"ratings:9080",
+  ":path":"/ratings/0",
+  ":method":"GET",
+  ":scheme":"http",
+  "x-request-id":"f41b49b4-9d18-9f1d-bf62-b09a33c7d417",
+  "x-b3-traceid":"abc8b3c03ab1e767f63605d0fefb2655",
+  "x-b3-spanid":"f36cc92e905beb5f",
+  "x-b3-parentspanid":"bc3ca07250a7acc4",
+  "x-source-service-name":"MockService",
+  "x-communication-id":"123142123",
+  "body":""
+}
+````
 
-## Related Guides
+**Aufnehmen von Responses**
 
-- Hibernate ORM ([guide](https://quarkus.io/guides/hibernate-orm)): Define your persistent model with Hibernate ORM and Jakarta Persistence
-- RESTEasy Reactive ([guide](https://quarkus.io/guides/resteasy-reactive)): A Jakarta REST implementation utilizing build time processing and Vert.x. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it.
-- JDBC Driver - MariaDB ([guide](https://quarkus.io/guides/datasource)): Connect to the MariaDB database via JDBC
+``POST``:``localhost:8080/scenario/response``
+````json
+{
+  ":status":"200",
+  ":content-type":"application/json",
+  "body":"{\"id\":0,'author':\"William Shakespeare\",\"year\":1595,\"type\":\"paperback\",\"pages\":200,\"publisher\":\"PublisherA\",\"language\":\"English\",\"ISBN-10\":\"1234567890\",\"ISBN-13\":\"123-1234567890\"}"
+}
+````
 
-## Provided Code
+**Lesen eines Ausführungsszenarios**
 
-### Hibernate ORM
+``GET``:``localhost:8080/scenario/{Szenario-ID}``
 
-Create your first JPA entity
+**Stoppen der Aufnahme**
 
-[Related guide section...](https://quarkus.io/guides/hibernate-orm)
-
-
-
-### RESTEasy Reactive
-
-Easily start your Reactive RESTful Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+``GET``:``http://localhost:8080/scenario/record/stop/{Szenario-ID}``
