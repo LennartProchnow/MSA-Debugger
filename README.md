@@ -1,7 +1,7 @@
 # MSA-Debugger
 Dieses Repo beinhaltet ein Debugging Werkzeug für die Fehleranalyse von Microservice Architekturen, indem dieser die Kommunikation innerhalb einer Microservice Anwendung aufnimmt und diese anschließend in einer lokalen Entwicklungsumgebung wiedergeben kann. Hierbei kann der Debugger die Microservice Anwendung simulieren, sodass ein einzelner Microservice in einer IDE gestartet und analysiert werden kann.
 
-Bei diesem Debugger handelt es sich im einen **Prototyp** aus einer Masterarbeit. 
+Bei diesem Debugger handelt es sich um einen **Prototyp** aus einer Masterarbeit. 
 
 ![Concept Overview](Grundkonzept.png)
 
@@ -11,7 +11,7 @@ Hierfür besteht der Debugger aus drei Komponenten:
 - **Scenario-Executor**: Simuliert innerhalb einer lokalen Entwicklungsumgebung die Microservice Anwendung und spielt die Kommunikation der Microservice Anwendung deterministisch ein.
 
 ## Voraussetzungen
-Vorraussetzung für den Betrieb des Debuggers ist eine bestehende Microservice Umgebung mit Kubernetes und Istio.
+Vorraussetzung für den Betrieb des Debuggers ist eine bestehende Microservice Anwendung mit Kubernetes und Istio.
 - Kubernetes (getestet mit Version 1.27)
 - Istio (getestet mit Version 1.17.2)
 
