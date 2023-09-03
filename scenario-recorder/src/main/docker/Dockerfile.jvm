@@ -7,7 +7,7 @@
 #
 # Then, build the image with:
 #
-# docker build -f src/main/docker/Dockerfile.jvm -t quarkus/scenario-recorder-jvm .
+# docker build -f src/main/docker/Dockerfile.jvm -t lennartprochnow/scenario-recorder .
 #
 # Then run the container using:
 #
