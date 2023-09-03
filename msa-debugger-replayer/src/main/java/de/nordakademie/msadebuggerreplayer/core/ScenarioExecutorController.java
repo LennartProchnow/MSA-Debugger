@@ -29,9 +29,6 @@ public class ScenarioExecutorController {
 
     @PostMapping("/prepare/{id}")
     public ScenarioQueue startPreparationPhase(@PathVariable(name = "id") String id) {
-        // die ScenarioEvents werden überführt in ReplayEvents
-        // die Events werden in eine Execution Queue geschrieben
-        // die Execution Queue wird dann zurück gegeben
         var scenario = registry.getScenario(id);
         if(scenario == null) {
             throw new IllegalArgumentException(String.format("A Scenario with the id: %s is not available", id));
@@ -42,12 +39,8 @@ public class ScenarioExecutorController {
 
     @PostMapping("/execute")
     public String startExecutionPhase(@RequestBody ScenarioQueue queue) {
-        // hier sollte dann als Eingabe Parameter die ExecutionQueue zurückgegeben werden,
-        // die entsprechend bearbeitet bearbeitet worden ist
-        // anschließend kann die Ausführung gestartet werden
         executor.executeReplay(queue);
         return "finished Execution Phase";
-        // Die Steuerung sollte über den Executor passieren
     }
 
     public void restart(){
