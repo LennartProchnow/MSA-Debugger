@@ -41,10 +41,11 @@ public class ScenarioExecutor {
 
         scenario.getEvents().forEach(e -> {
             if (e.getType() == Communication.REQUEST) {
-                requestsToReplay.add(convertScenarioEventToRequestEvent(e));
+                if(isApplicableForReplay(e)){
+                    requestsToReplay.add(convertScenarioEventToRequestEvent(e));
+                }
             } else if (e.getType() == Communication.RESPONSE) {
-                //ToDo: der hier müsste dann eigentlich in einer eigenen Liste abgefackelt werden
-                throw new UnsupportedOperationException("not implemented yet");
+                responseEvents.add(convertScenarioEventToResponseEvent(e));
             } else {
                 throw new IllegalArgumentException(String.format("Events with the CommunicationType: %s are not supported", e.getType()));
             }
@@ -56,57 +57,60 @@ public class ScenarioExecutor {
         return queue;
     }
 
+    private ResponseEvent convertScenarioEventToResponseEvent(Event e) {
+        ResponseEvent response = new ResponseEvent();
+        response.setBody(e.getBody().body());
+        e.getHeaders().forEach(header -> {
+            switch (header.key()) {
+                case ":status" -> response.setStatus(header.value());
+                case "x-request-id" -> response.setRequestId(header.value());
+                default -> {
+                    //ToDo: add other header
+                }
+            }
+        });
+        return response;
+    }
+
+    /**
+     * checks if the event is applicable for the replay, so it checks if the event contains a registered Microservice
+     * @param e
+     * @return
+     */
+    private boolean isApplicableForReplay(Event e) {
+        return microserviceRegistry.isRegistered(e.getTarget(), e.getSource());
+    }
+
     private ReplayEvent convertScenarioEventToRequestEvent(Event scenarioEvent){
         var targetName = scenarioEvent.getTarget();
         ServiceConfig targetConfig = microserviceRegistry.getServiceConfig(targetName);
-        //ToDo das betrachtet jetzt erstmal keine Kommunikation, von Services die garnicht abgespielt werden soll
-        // dann soo -> ServiceConfig sourceConfig = microserviceRegistry.getServiceConfig(source);
+
+        ReplayEvent replayEvent;
 
         if(targetConfig == null) {//no registered service is the target Service so executor could be target
-            return createRequestReceiveEvent(scenarioEvent);
+            replayEvent = new RequestReceiveEvent(requestEventSink);
         } else {// service is registered and should be the target of the request
-            return createRequestSendEvent(scenarioEvent, targetConfig);
+            replayEvent = new RequestSendEvent(this.sender);
+            ((RequestSendEvent) replayEvent).setCommunicationBody(scenarioEvent.getBody().body());
+            ((RequestSendEvent) replayEvent).setServiceConfig(targetConfig);
+
         }
-    }
 
-    private RequestReceiveEvent createRequestReceiveEvent(Event scenarioEvent) {
-        RequestReceiveEvent event = new RequestReceiveEvent(requestEventSink);
         scenarioEvent.getHeaders().forEach(header -> {
             switch (header.key()) {
-                case ":path" -> event.setPath(header.value());
-                case ":method" -> event.setHttpMethod(header.value());
-                case ":authority" -> event.setServiceName(header.value());
-                case "x-request-id" -> event.setRequestId(header.value());
+                case ":path" -> replayEvent.setPath(header.value());
+                case ":method" -> replayEvent.setHttpMethod(header.value());
+                case ":authority" -> replayEvent.setServiceName(header.value());
+                case "x-communication-id" -> replayEvent.setRequestId(header.value());
                 default -> {
                     //ToDo hier könnten Custom Header hinzugefügt werden
                 }
             }
         });
 
-        event.setLamportTime(scenarioEvent.getLamportTime());
+        replayEvent.setLamportTime(scenarioEvent.getLamportTime());
 
-        return event;
-
-    }
-
-    private RequestSendEvent createRequestSendEvent(Event scenarioEvent, ServiceConfig config){
-        RequestSendEvent event = new RequestSendEvent(this.sender);
-        scenarioEvent.getHeaders().forEach(header -> {
-            switch (header.key()) {
-                case ":path" -> event.setPath(header.value());
-                case ":method" -> event.setHttpMethod(header.value());
-                case ":authority" -> event.setServiceName(header.value());
-                case "x-request-id" -> event.setRequestId(header.value());
-                default -> {
-                    //ToDo hier könnten Custom Header hinzugefügt werden
-                }
-            }
-        });
-        event.setCommunicationBody(scenarioEvent.getBody().body());
-        event.setLamportTime(scenarioEvent.getLamportTime());
-        event.setServiceConfig(config);
-
-        return event;
+        return replayEvent;
     }
 
     public void executeReplay(ScenarioQueue queue) {
@@ -129,8 +133,6 @@ public class ScenarioExecutor {
         } else {
             requestEventSink.setNextEventExecution(exe);
         }
-
-        //nextEvent.apply(exe);
     }
 
 }

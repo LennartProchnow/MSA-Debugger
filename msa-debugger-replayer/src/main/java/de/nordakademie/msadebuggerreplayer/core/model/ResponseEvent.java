@@ -20,14 +20,6 @@ public class ResponseEvent {
         return this.requestId;
     }
 
-    public String getCommunicationBody() {
-        return body;
-    }
-
-    public void setCommunicationBody(String body) {
-        this.body = body;
-    }
-
     public String getStatus() {
         return status;
     }

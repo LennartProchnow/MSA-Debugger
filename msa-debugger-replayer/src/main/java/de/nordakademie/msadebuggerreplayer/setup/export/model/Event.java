@@ -15,6 +15,10 @@ public class Event {
 
     private String target;
 
+    private String source;
+
+    private String communicationId;
+
     public Event(Communication type, int lamportTime, List<Header> headers, EventBody body, String target) {
         this.type = type;
         this.lamportTime = lamportTime;
@@ -64,5 +68,21 @@ public class Event {
 
     public void setTarget(String target) {
         this.target = target;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public String getSource() {
+        return this.source;
+    }
+
+    public String getCommunicationId() {
+        return communicationId;
+    }
+
+    public void setCommunicationId(String communicationId) {
+        this.communicationId = communicationId;
     }
 }

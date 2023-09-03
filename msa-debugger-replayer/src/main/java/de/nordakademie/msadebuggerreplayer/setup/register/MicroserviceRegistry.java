@@ -33,4 +33,8 @@ public class MicroserviceRegistry {
         registry.clear();
         return result;
     }
+
+    public boolean isRegistered(String target, String source) {
+        return registry.containsKey(target) || registry.containsKey(source);
+    }
 }

@@ -22,13 +22,9 @@ public class ScenarioExecutorController {
 
     @PostMapping("/setup/{scenarioId}")
     public String startSetupPhase(@PathVariable(name = "scenarioId") String scenarioId) {
-        // hier wird dann das Scenario geladen
-        // Die Microservices können sich Connecten
-
         exportService.exportScenario(scenarioId);
 
         return "finished Setup Phase";
-        // Die Steuerung sollte über den Executor passieren
     }
 
     @PostMapping("/prepare/{id}")
