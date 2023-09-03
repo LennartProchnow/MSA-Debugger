@@ -35,7 +35,7 @@ Deployment des Scenario-Recorders:
 
 Deployment der Record-Agents:
 
-```` kubectl apply -f "deployment/Envoy Config/http-envoy-filter.yaml ````
+```` kubectl apply -f "deployment/Envoy Config/http-envoy-filter.yaml" ````
 
 ## Setup des Scenario-Executor
 
